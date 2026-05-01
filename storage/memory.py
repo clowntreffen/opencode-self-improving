@@ -72,3 +72,9 @@ class MemoryStorage(StorageBase):
 
     def get_all_lessons(self) -> List[Dict[str, Any]]:
         return list(self._lessons.values())
+
+    def get_all_sessions(self) -> List[Dict[str, Any]]:
+        return list(self._sessions)
+
+    def get_all_configs(self) -> Dict[str, Any]:
+        return dict(self._configs)

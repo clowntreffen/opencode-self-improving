@@ -65,6 +65,21 @@ class HFDatasetStorage(StorageBase):
             except Exception:
                 pass
 
+        try:
+            cfg_path = hf_hub_download(
+                repo_id=DATASET_ID,
+                filename="config/index.json",
+                repo_type="dataset",
+                token=self._token,
+            )
+            with open(cfg_path, "r") as f:
+                configs = json.load(f)
+            if isinstance(configs, list) and configs:
+                for k, v in configs[0].items():
+                    self._memory.save_config(k, v)
+        except Exception:
+            pass
+
     def _persist_to_dataset(self, folder: str, items: List[Dict]):
         if not self._api:
             return
@@ -108,6 +123,8 @@ class HFDatasetStorage(StorageBase):
     def save_session(self, session: Dict[str, Any]) -> bool:
         self._ensure_loaded()
         result = self._memory.save_session(session)
+        if result:
+            self._persist_to_dataset("sessions", self._memory.get_all_sessions())
         return result
 
     def get_sessions(self, limit: int = 100) -> List[Dict[str, Any]]:
@@ -116,7 +133,10 @@ class HFDatasetStorage(StorageBase):
 
     def save_config(self, key: str, value: Any) -> bool:
         self._ensure_loaded()
-        return self._memory.save_config(key, value)
+        result = self._memory.save_config(key, value)
+        if result:
+            self._persist_to_dataset("config", [self._memory.get_all_configs()])
+        return result
 
     def get_config(self, key: str) -> Optional[Any]:
         self._ensure_loaded()
