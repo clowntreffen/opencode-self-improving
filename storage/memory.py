@@ -64,9 +64,11 @@ class MemoryStorage(StorageBase):
         return self._configs.get(key)
     
     def get_stats(self) -> Dict[str, int]:
-        """Get storage statistics."""
         return {
             "lessons_count": len(self._lessons),
             "sessions_count": len(self._sessions),
-            "config_count": len(self._configs)
+            "config_count": len(self._configs),
         }
+
+    def get_all_lessons(self) -> List[Dict[str, Any]]:
+        return list(self._lessons.values())
