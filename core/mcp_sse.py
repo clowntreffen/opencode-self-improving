@@ -173,7 +173,7 @@ async def handle_sse(request: Request) -> StreamingResponse:
     client = SSEClient()
     _clients[client.id] = client
 
-    messages_url = str(request.url.replace(query=None)).replace("/sse", "/messages")
+    messages_url = "https://" + request.headers.get("host", "hermesinho-opencode-self-improving.hf.space") + "/gradio_api/mcp/messages"
 
     async def event_stream():
         yield "event: endpoint\ndata: {}\n\n".format(messages_url)
@@ -196,7 +196,7 @@ async def handle_sse(request: Request) -> StreamingResponse:
     })
 
 
-async def handle_messages(request: Request) -> Response:
+async def handle_streamable_http(request: Request) -> Response:
     body = await request.json()
     method = body.get("method", "")
     req_id = body.get("id")
@@ -229,6 +229,8 @@ async def handle_messages(request: Request) -> Response:
                 "content": [{"type": "text", "text": json.dumps({"error": str(e)})}],
                 "isError": True,
             }
+    elif method == "ping":
+        result = {}
     else:
         resp = _jsonrpc_error(req_id, -32601, "Method not found: " + method)
         return Response(content=json.dumps(resp), media_type="application/json")
@@ -238,10 +240,21 @@ async def handle_messages(request: Request) -> Response:
     for cid, cl in list(_clients.items()):
         await _send_to_client(cl, resp)
 
+    accept = request.headers.get("accept", "")
+    if "text/event-stream" in accept:
+        async def single_sse():
+            yield "event: message\ndata: {}\n\n".format(json.dumps(resp))
+        return StreamingResponse(single_sse(), media_type="text/event-stream")
+
     return Response(content=json.dumps(resp), media_type="application/json")
 
 
+async def handle_messages(request: Request) -> Response:
+    return await handle_streamable_http(request)
+
+
 def mount_mcp(app):
-    """Mount custom MCP SSE endpoints on a FastAPI/Starlette app."""
+    """Mount custom MCP endpoints on a FastAPI/Starlette app."""
     app.add_route("/gradio_api/mcp/sse", handle_sse, methods=["GET"])
+    app.add_route("/gradio_api/mcp/sse", handle_streamable_http, methods=["POST"])
     app.add_route("/gradio_api/mcp/messages", handle_messages, methods=["POST"])
