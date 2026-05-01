@@ -28,10 +28,36 @@ class HFBucketStorage(StorageBase):
             self._loaded = True
 
     def _load_from_bucket(self):
-        """Load existing data from bucket."""
-        # This would be called at startup to load cached data
-        # For now, we rely on in-memory cache + bucket writes
-        pass
+        """Load existing data from /data/ bucket on startup."""
+        import os as _os
+        
+        lessons_dir = "/data/lessons"
+        if _os.path.exists(lessons_dir):
+            for type_dir in _os.listdir(lessons_dir):
+                type_path = _os.path.join(lessons_dir, type_dir)
+                if not _os.isdir(type_path):
+                    continue
+                for fname in _os.listdir(type_path):
+                    if not fname.endswith(".json"):
+                        continue
+                    try:
+                        with open(_os.path.join(type_path, fname), "r") as f:
+                            lesson = json.load(f)
+                            self._memory.save_lesson(lesson)
+                    except Exception:
+                        pass
+
+        sessions_dir = "/data/sessions"
+        if _os.path.exists(sessions_dir):
+            for fname in _os.listdir(sessions_dir):
+                if not fname.endswith(".json"):
+                    continue
+                try:
+                    with open(_os.path.join(sessions_dir, fname), "r") as f:
+                        session = json.load(f)
+                        self._memory.save_session(session)
+                except Exception:
+                    pass
 
     def _get_file_path(self, folder: str, filename: str) -> str:
         """Get the full path in the bucket."""

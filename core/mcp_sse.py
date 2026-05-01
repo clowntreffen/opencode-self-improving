@@ -246,15 +246,29 @@ async def handle_streamable_http(request: Request) -> Response:
             yield "event: message\ndata: {}\n\n".format(json.dumps(resp))
         return StreamingResponse(single_sse(), media_type="text/event-stream")
 
-    return Response(content=json.dumps(resp), media_type="application/json")
+    return Response(content=json.dumps(resp), media_type="application/json", headers={
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+    })
 
 
 async def handle_messages(request: Request) -> Response:
     return await handle_streamable_http(request)
 
 
+async def handle_options(request: Request) -> Response:
+    return Response(status_code=204, headers={
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+    })
+
+
 def mount_mcp(app):
     """Mount custom MCP endpoints on a FastAPI/Starlette app."""
     app.add_route("/gradio_api/mcp/sse", handle_sse, methods=["GET"])
     app.add_route("/gradio_api/mcp/sse", handle_streamable_http, methods=["POST"])
+    app.add_route("/gradio_api/mcp/sse", handle_options, methods=["OPTIONS"])
     app.add_route("/gradio_api/mcp/messages", handle_messages, methods=["POST"])
+    app.add_route("/gradio_api/mcp/messages", handle_options, methods=["OPTIONS"])
