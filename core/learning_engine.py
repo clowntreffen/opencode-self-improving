@@ -116,10 +116,11 @@ class LearningEngine:
                     result["issues"].append("Error pattern: " + pattern)
                     break
 
-        if expected and isinstance(response, str):
-            if expected.lower() not in response.lower():
+        if expected:
+            response_str = str(response).lower()
+            if expected.lower() not in response_str:
                 result["valid"] = False
-                result["issues"].append("Expected '" + expected + "' not found")
+                result["issues"].append("Expected '" + expected + "' not found in response")
 
         return result
 
