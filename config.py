@@ -19,8 +19,8 @@ class Config:
     )
 
     # Vikunja (optional)
-    VIKUNJA_ENABLED = os.getenv("VIKUNJA_ENABLED", "true").lower() == "true"
-    VIKUNJA_URL = os.getenv("VIKUNJA_URL", "http://dietpi:3457/sse")
+    VIKUNJA_ENABLED = os.getenv("VIKUNJA_ENABLED", "false").lower() == "true"
+    VIKUNJA_URL = os.getenv("VIKUNJA_URL", "")
 
     # Storage
     HF_BUCKET_PATH = "/data"
