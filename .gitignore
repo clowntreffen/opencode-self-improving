@@ -1,0 +1,13 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+.git/
+deploy.py
+git_deploy.py
+upload_files.py
+tests/
+*.egg-info/
+dist/
+build/
+.tmp/
